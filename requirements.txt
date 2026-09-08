@@ -1,0 +1,11 @@
+# Runtime dependencies for the bundled parsers (scripts/).
+#
+# bank_statement.py + institutions/*.py     -> pdfplumber
+# csv_statement.py  + csv_institutions/*.py -> openpyxl (for .xlsx; .csv is stdlib)
+# institutions/check_ocr.py                 -> pdfplumber + stdlib only
+#
+# Orby provisions its own ingest venv from pkg/ingest/pyruntime.go's
+# requiredPackages, a superset of this list (it also runs the
+# non-parser redact_pdf_text.py, which needs pikepdf/pyyaml/fonttools).
+pdfplumber
+openpyxl

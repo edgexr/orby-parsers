@@ -1,0 +1,4 @@
+Trade Date,Action,Symbol,Description,Quantity,Price,Amount
+06/03/2026,Buy,AAPL,Bought 2 shares of AAPL,2.000,205.00,-410.00
+06/15/2026,Dividend,VOO,Dividend Vanguard S&P 500 ETF,,,12.45
+06/28/2026,Sell,AAPL,Sold 1 share of AAPL,-1.000,215.00,215.00

@@ -1,0 +1,26 @@
+{
+  "account": "4491",
+  "accountType": "Brokerage",
+  "coreValue": 898.84,
+  "costBasis": {
+    "SYNFX": 211246.24,
+    "SYNXX": null,
+    "ZALP": 42825.13,
+    "ZBET": 25619.84,
+    "ZDEL": 20919.29,
+    "ZEPS": 21406.27,
+    "ZGAM": 52994.05
+  },
+  "file": "fidelity-synthetic-year-end-2025.pdf",
+  "positions": {
+    "SYNFX": 359372.02,
+    "SYNXX": 898.84,
+    "ZALP": 63021.19,
+    "ZBET": 44077.74,
+    "ZDEL": 25459.98,
+    "ZEPS": 17477.86,
+    "ZGAM": 61194.46
+  },
+  "statementDate": "2025-12-31",
+  "totalHoldings": 571502.09
+}

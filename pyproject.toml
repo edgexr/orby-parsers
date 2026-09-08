@@ -1,0 +1,18 @@
+[project]
+name = "orby-parsers"
+version = "0.1.0"
+description = "Bank/brokerage/CSV statement parsers for Orby's transaction ingest"
+requires-python = ">=3.11"
+dependencies = ["pdfplumber", "openpyxl"]
+
+[project.optional-dependencies]
+test = ["pytest", "pillow"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.setuptools]
+# Not a pip-installable package; the scripts run in place. This block
+# only exists so `pyproject.toml` is a valid PEP 621 file for tooling.
+py-modules = []

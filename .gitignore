@@ -1,0 +1,19 @@
+.venv/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+# Redacted REAL statements + their expectations live outside git (real
+# balances, real partial account numbers). Committed fixtures are wholly
+# synthetic. The tests that read these skip where absent.
+tests/fixtures/private-statement-expectations.json
+tests/fixtures/fid-stmt*.pdf
+tests/fixtures/Statement*-redacted.pdf
+tests/fixtures/bofa-sample-statement-2018.pdf
+tests/fixtures/bofa-savings-2012.pdf
+
+# Wholly synthetic but regenerated on demand by conftest.py rather than
+# stored (see each generator's docstring).
+tests/fixtures/bofa-checking-combined-2018-synthetic-sample.pdf
+tests/fixtures/bofa-combined-2012-synthetic-sample.pdf
+tests/fixtures/bofa-savings-legacy-single-account-synthetic-sample.pdf

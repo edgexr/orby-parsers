@@ -1,0 +1,87 @@
+{
+  "statements": [
+    {
+      "account": "3444",
+      "accountType": "Brokerage",
+      "closingCoreBalance": 893.56,
+      "coreFundActivity": -8930.2,
+      "file": "fidelity-synthetic-old-core-cash-202501.pdf",
+      "income": 893.56,
+      "netFlows": 0,
+      "positions": {
+        "CASH": 893.56
+      },
+      "securitiesBought": 0.0,
+      "securitiesSold": 0.0,
+      "statementDate": "2025-01-31",
+      "totalHoldings": 893.56
+    },
+    {
+      "account": "3444",
+      "accountType": "Brokerage",
+      "closingCoreBalance": 52254.2,
+      "coreFundActivity": -107745.8,
+      "file": "fidelity-synthetic-202601.pdf",
+      "income": 154.2,
+      "netFlows": 62000.0,
+      "positions": {
+        "SYNXX": 52254.2,
+        "ZQAA": 20500.0,
+        "ZQBB": 150600.0,
+        "ZQDD/Margin": 171600.0,
+        "ZQEE/Margin": 37500.0,
+        "ZQFF": 168000.0
+      },
+      "securitiesBought": -169900.0,
+      "securitiesSold": 0.0,
+      "statementDate": "2026-01-31",
+      "totalHoldings": 600454.2
+    },
+    {
+      "account": "3444",
+      "accountType": "Brokerage",
+      "closingCoreBalance": 38157.36,
+      "coreFundActivity": -14096.84,
+      "file": "fidelity-synthetic-202602.pdf",
+      "income": 3.44,
+      "netFlows": 36000.0,
+      "positions": {
+        "SYNXX": 38157.36,
+        "ZQAA": 21240.0,
+        "ZQAA/Margin": 663.75,
+        "ZQBB": 151800.0,
+        "ZQCC/Margin": 13440.0,
+        "ZQDD/Margin": 177400.0,
+        "ZQDD260918C230/Margin": -1275.0,
+        "ZQEE/Margin": 38200.0,
+        "ZQFF": 172000.0
+      },
+      "securitiesBought": -13755.72,
+      "securitiesSold": 2399.34,
+      "statementDate": "2026-02-28",
+      "totalHoldings": 611626.11
+    },
+    {
+      "account": "3444",
+      "accountType": "Brokerage",
+      "closingCoreBalance": 46549.7,
+      "coreFundActivity": 8392.34,
+      "file": "fidelity-synthetic-202603.pdf",
+      "income": 128.65,
+      "netFlows": -4000.0,
+      "positions": {
+        "SYNXX": 46549.7,
+        "ZQAA": 22646.25,
+        "ZQBB": 151275.0,
+        "ZQCC/Margin": 13845.0,
+        "ZQDD260918C230/Margin": -630.0,
+        "ZQEE/Margin": 39520.33,
+        "ZQGG/Margin": 175224.0
+      },
+      "securitiesBought": -431.65,
+      "securitiesSold": 1239.34,
+      "statementDate": "2026-03-31",
+      "totalHoldings": 448430.28
+    }
+  ]
+}

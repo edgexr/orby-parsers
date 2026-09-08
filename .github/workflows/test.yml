@@ -1,0 +1,26 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  parsers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Standalone: provisions .venv (pdfplumber, openpyxl, pytest,
+      # pillow) and runs pytest over tests/. The committed fixtures are
+      # wholly synthetic; tests over redacted real statements skip here.
+      - name: Run the parser suite
+        run: make test

@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest
+# gen-bofa-stmt-checks-sample.py draws a placeholder check image.
+pillow
