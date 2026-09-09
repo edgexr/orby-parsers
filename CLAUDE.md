@@ -46,6 +46,15 @@ common`.
    can be committed. Use `conftest.py`'s `run_statement` fixture.
 6. `make test`.
 
+Many parsers here arrive as PRs opened from Orby's "Submit via git/gh"
+button (Build Transactions Extractor → Manage Parsers): a user generates
+a parser against their own statement and contributes it back. Those PRs
+carry the parser under `scripts/<institutions|csv_institutions>/`
+(filename dash→underscore normalized), its `_PARSERS` registration, and a
+wholly-synthetic `tests/test_<name>.py` + `tests/fixtures/<...>` +
+`tests/generators/gen-<name>-sample.py` — reviewed the same as any
+hand-written parser.
+
 ## Fixing a bundled parser without a release
 
 Copy the bundled module to `~/.orby/ingest/parsers/<same-name>.py`, edit
