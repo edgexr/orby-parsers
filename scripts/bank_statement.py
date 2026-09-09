@@ -172,6 +172,7 @@ from institutions import (
     sample_brokerage,
     vanguard_brokerage,
     wells_fargo_checking,
+    fidelity_401k_brokerage_pdf,
 )
 
 _PARSERS = [
@@ -189,6 +190,7 @@ _PARSERS = [
     fidelity_brokerage,
     vanguard_brokerage,
     sample_brokerage,
+    fidelity_401k_brokerage_pdf,
 ]
 
 # Number of leading pages checked to identify the statement format before
