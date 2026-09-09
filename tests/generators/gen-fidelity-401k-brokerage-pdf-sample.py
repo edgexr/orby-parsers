@@ -32,6 +32,22 @@ LINES = [
     "Ending Balance $10,388.00",
     "Dividends & Interest $42.50",
     "",
+    "Your Account Activity",
+    "Statement Period: 04/01/2026 to 06/30/2026",
+    "Use this section as a summary of transactions that occurred in your account during the statement period.",
+    [(248, "Synthetic"), (332, "Blue"), (420, "Total")],
+    [(144, "Activity")],
+    [(248, "Growth"), (332, "Horizon")],
+    [(248, "Index"), (332, "Bond")],
+    [(144, "Beginning Balance"), (248, "$5,000.00"), (332, "$5,000.00"), (420, "$10,000.00")],
+    [(146, "Exchange In"), (248, "$500.00"), (332, "$0.00"), (420, "$500.00")],
+    [(146, "Exchange Out"), (248, "$0.00"), (332, "-$250.00"), (420, "-$250.00")],
+    [(146, "Revenue Credit"), (248, "$10.00"), (332, "$2.34"), (420, "$12.34")],
+    [(146, "Change In Market Value"), (248, "$100.00"), (332, "$25.66"), (420, "$125.66")],
+    [(144, "Ending Balance"), (248, "$5,610.00"), (332, "$4,778.00"), (420, "$10,388.00")],
+    [(146, "Dividends & Interest"), (248, "$30.00"), (332, "$12.50"), (420, "$42.50")],
+    "Revenue Credit represents your share of a pricing credit from Fidelity Investments.",
+    "",
     "Market Value of Your Account",
     "Investment as of 04/01/2026 Investment as of 06/30/2026",
     "Shares/Units Beginning Ending Price as of 04/01/2026 Price as of 06/30/2026 Market Value Beginning Market Value Ending",
@@ -44,7 +60,7 @@ LINES = [
     "Account Totals $9,900.00 $10,388.00",
     "",
     "Detailed Transaction History",
-    "This synthetic statement intentionally prints aggregate statement-period activity only.",
+    "This synthetic statement intentionally prints only statement-period activity summaries.",
 ]
 
 
@@ -52,7 +68,13 @@ def escape(s: str) -> bytes:
     return s.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)").encode("latin-1", "replace")
 
 
-def build_pdf(lines: list[str], path: str) -> None:
+def draw_text(stream: bytearray, text: str, x: float, y: float) -> None:
+    stream.extend(f"BT /F1 {FONT_SIZE} Tf 1 0 0 1 {x} {y:.2f} Tm (".encode())
+    stream.extend(escape(text))
+    stream.extend(b") Tj ET\n")
+
+
+def build_pdf(lines: list, path: str) -> None:
     out = bytearray(b"%PDF-1.4\n")
     offsets: dict[int, int] = {}
 
@@ -76,10 +98,11 @@ def build_pdf(lines: list[str], path: str) -> None:
     stream = bytearray()
     y = PAGE_H - 45
     for line in lines:
-        if line:
-            stream.extend(f"BT /F1 {FONT_SIZE} Tf 1 0 0 1 {X} {y:.2f} Tm (".encode())
-            stream.extend(escape(line))
-            stream.extend(b") Tj ET\n")
+        if isinstance(line, list):
+            for x, text in line:
+                draw_text(stream, text, x, y)
+        elif line:
+            draw_text(stream, line, X, y)
         y -= LINE_H
     add_obj(5, b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + bytes(stream) + b"endstream")
 
