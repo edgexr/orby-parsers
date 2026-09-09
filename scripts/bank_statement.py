@@ -162,36 +162,15 @@ import sys
 import pdfplumber
 
 import parser_common
-from institutions import (
-    bofa_checking,
-    bofa_checking_combined,
-    bofa_combined_statement,
-    bofa_credit_card,
-    chase_credit_card,
-    fidelity_brokerage,
-    sample_brokerage,
-    vanguard_brokerage,
-    wells_fargo_checking,
-    fidelity_401k_brokerage_pdf,
-)
+import institutions
 
-_PARSERS = [
-    # bofa_checking_combined must precede bofa_checking: bofa_checking's
-    # generic "Your ... for DATE to DATE" header regex also matches a
-    # modern combined statement's "Your combined statement for DATE to
-    # DATE" header (it would then treat every account's transactions as
-    # belonging to one account) - see bofa_checking_combined's docstring.
-    bofa_checking_combined,
-    bofa_checking,
-    bofa_combined_statement,
-    bofa_credit_card,
-    wells_fargo_checking,
-    chase_credit_card,
-    fidelity_brokerage,
-    vanguard_brokerage,
-    sample_brokerage,
-    fidelity_401k_brokerage_pdf,
-]
+# Auto-discovered from every institutions/*.py exposing detect()/parse(),
+# ordered by (PRIORITY, filename) - see parser_common.discover_parsers.
+# Adding a parser is just adding a file under institutions/; a module
+# whose detect() could shadow another's sets a module-scope PRIORITY
+# (e.g. bofa_checking_combined, whose header regex is a superset of
+# bofa_checking's).
+_PARSERS = parser_common.discover_parsers(institutions)
 
 # Number of leading pages checked to identify the statement format before
 # committing to extracting/parsing the rest of the document. Statements

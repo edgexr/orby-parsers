@@ -3,8 +3,9 @@
 Every parser under `scripts/institutions/` (PDF) and
 `scripts/csv_institutions/` (CSV / `.xlsx`) exposes a `detect()` / `parse()`
 pair. The dispatchers (`scripts/bank_statement.py`,
-`scripts/csv_statement.py`) try each registered parser's `detect()` in
-order, first match wins, then call that parser's `parse()`. The result is
+`scripts/csv_statement.py`) auto-discover every parser file in their
+directory and try each one's `detect()` in `(PRIORITY, filename)` order,
+first match wins, then call that parser's `parse()`. The result is
 strictly validated by `scripts/parser_common.py`
 (`validate_parse_result` / `validate_multi_table_parse_result`) before it
 is printed as JSON — an extra, missing, or wrong-typed key fails loudly

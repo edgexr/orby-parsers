@@ -134,19 +134,14 @@ import json
 import sys
 
 import parser_common
-from csv_institutions import (
-    chase_checking_csv,
-    fidelity_brokerage_csv,
-    sample_brokerage_csv,
-    vanguard_brokerage,
-)
+import csv_institutions
 
-_PARSERS = [
-    chase_checking_csv,
-    fidelity_brokerage_csv,
-    sample_brokerage_csv,
-    vanguard_brokerage,
-]
+# Auto-discovered from every csv_institutions/*.py exposing detect()/
+# parse(), ordered by (PRIORITY, filename) - see
+# parser_common.discover_parsers. Adding a parser is just adding a file
+# under csv_institutions/; set a module-scope PRIORITY only if its
+# detect() could shadow another's.
+_PARSERS = parser_common.discover_parsers(csv_institutions)
 
 # Number of leading data rows read (alongside the header) to identify
 # the export format before committing to parsing the rest of the file.

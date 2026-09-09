@@ -34,6 +34,13 @@ import pdfplumber
 
 from . import bofa_checking, check_ocr, common
 
+# Must be tried before bofa_checking: bofa_checking's generic "Your ...
+# for DATE to DATE" header regex also matches this modern combined
+# statement's "Your combined statement for DATE to DATE" header (it would
+# then treat every account's transactions as belonging to one account).
+# Alphabetical order puts bofa_checking first, so sort ahead of it here.
+PRIORITY = 90
+
 _HEADER_RE = re.compile(
     r"Your combined statement\s*\n\s*for\s+(\w+ \d{1,2},? \d{4})\s+to\s+(\w+ \d{1,2},? \d{4})",
     re.IGNORECASE,

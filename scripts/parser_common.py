@@ -29,8 +29,10 @@ given file is - see _detect's docstring.
 """
 
 import glob
+import importlib
 import importlib.util
 import os
+import pkgutil
 import re
 
 # --- spreadsheet header/footer detection, shared by csv_statement.py's
@@ -131,6 +133,45 @@ def module_kind(module) -> str:
     gets called with.
     """
     return getattr(module, "KIND", KIND_BANK)
+
+
+# Default sort key for a discovered parser that doesn't set its own
+# PRIORITY - see discover_parsers.
+DEFAULT_PRIORITY = 100
+
+
+def discover_parsers(package):
+    """Imports every submodule of `package` (a parser package like
+    `institutions` or `csv_institutions`) that exposes a detect()/parse()
+    pair, and returns them as a dispatcher's ordered try-list - so adding
+    a parser is just dropping a new file in that package's directory, with
+    no _PARSERS list (and no import block) in the dispatcher to edit.
+
+    Order (first match wins in `detect`) is `(PRIORITY, module name)`: a
+    module may set a module-scope `PRIORITY` int (default
+    DEFAULT_PRIORITY) to sort ahead of / behind its alphabetical
+    neighbours when two modules' detect() could both match the same
+    document and precedence matters (e.g. institutions/bofa_checking_combined,
+    whose header regex is a superset of bofa_checking's). Most modules
+    need no PRIORITY - alphabetical order is fine when detect()s are
+    mutually exclusive.
+
+    A submodule that doesn't define both detect() and parse() (helper
+    modules like institutions/common.py, institutions/check_ocr.py) is
+    skipped, as is a private `_`-prefixed one. An import error is NOT
+    swallowed here - a bundled module that won't import is a build bug and
+    should fail loudly (unlike an externally-dropped plugin, whose import
+    errors load_extra_parsers folds into the detect diagnostic).
+    """
+    modules = []
+    for info in pkgutil.iter_modules(package.__path__):
+        if info.name.startswith("_"):
+            continue
+        module = importlib.import_module(f"{package.__name__}.{info.name}")
+        if hasattr(module, "detect") and hasattr(module, "parse"):
+            modules.append(module)
+    modules.sort(key=lambda m: (getattr(m, "PRIORITY", DEFAULT_PRIORITY), m.__name__.rsplit(".", 1)[-1]))
+    return modules
 
 
 # --- tables-dict parse() contract, used by KIND_BROKERAGE modules (a
