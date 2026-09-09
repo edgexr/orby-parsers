@@ -284,7 +284,29 @@ def main() -> None:
 
     result["detected"] = True
     result.setdefault("needsVisionOcr", False)
+    _attach_shadow_warning(result, module, only_extra_parser)
     print(json.dumps(result))
+
+
+def _attach_shadow_warning(result: dict, module, only_extra_parser) -> None:
+    """Adds a "warnings" list to result when the matched parser is a
+    local extra-parsers-dir copy shadowing an equivalent bundled parser
+    (see parser_common.bundled_shadow_of) - a non-fatal heads-up the Go
+    side surfaces on Build Transactions Extractor's Verify step, so a
+    user editing a parser they've already contributed upstream isn't
+    just told nothing matched / the wrong thing matched.
+    """
+    if only_extra_parser:
+        return
+    shadowed = parser_common.bundled_shadow_of(_PARSERS, module)
+    if not shadowed:
+        return
+    result.setdefault("warnings", []).append(
+        f"This parser is now also bundled with Orby as {shadowed} (it was "
+        f"merged upstream). Your local copy in the parsers directory is "
+        f"taking precedence while you keep editing it; remove it from "
+        f"Manage Parsers once you're done to use the bundled version."
+    )
 
 
 if __name__ == "__main__":

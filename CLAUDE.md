@@ -76,6 +76,16 @@ module at its original position in the try order
 (`parser_common.merge_parsers`). A differently-named file is a new
 parser, tried after all bundled ones.
 
+Name matching here is `-`/`_` insensitive (`parser_common.parser_name_key`):
+a parser built locally by Orby's Build Transactions Extractor is
+dash-named (`foo-bar-pdf.py`), and once contributed upstream it ships
+bundled dash→underscore-normalized (`foo_bar_pdf.py`) — these are treated
+as the same parser, so the still-present local copy keeps overriding the
+now-bundled one and the user can go on editing it. The dispatchers report
+that collision as a non-fatal `warnings` entry in their JSON output
+(`parser_common.bundled_shadow_of`), which Orby surfaces on the Verify
+step rather than failing.
+
 **This directory's files run sandboxed** (no network, filesystem limited
 to the target file's directory and the parsers directory). Stdlib +
 `pdfplumber` + `openpyxl` only — no per-plugin dependency install. A file

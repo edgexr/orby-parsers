@@ -140,6 +140,22 @@ def module_kind(module) -> str:
 DEFAULT_PRIORITY = 100
 
 
+def parser_name_key(name: str) -> str:
+    """Normalizes a parser module name for identity comparison: drops any
+    package prefix (institutions.foo -> foo), any trailing .py, and
+    treats '-' and '_' as equivalent.
+
+    This is what lets a locally-built parser file (dash-named by
+    pkg/project/financeparser, e.g. fidelity-401k-brokerage-pdf.py) and
+    the same parser once it has been merged upstream and now ships
+    bundled (dash->underscore normalized by pkg/parsersubmit, e.g.
+    fidelity_401k_brokerage_pdf) be recognized as the same parser - by
+    merge_parsers (so the local copy keeps overriding the bundled one)
+    and by bundled_shadow_of / check_expected_parser.
+    """
+    return name.rsplit(".", 1)[-1].replace("-", "_")
+
+
 def discover_parsers(package):
     """Imports every submodule of `package` (a parser package like
     `institutions` or `csv_institutions`) that exposes a detect()/parse()
@@ -450,18 +466,51 @@ def merge_parsers(bundled: list, extra: list) -> list:
     bank_statement.py's module docstring). An extra module with no
     matching bundled name is a new parser, appended after every bundled
     one, same as before this override behavior existed.
+
+    Name matching is '-'/'_' insensitive (parser_name_key): a parser
+    built locally as `foo-bar-pdf.py` still overrides its own bundled
+    copy `foo_bar_pdf.py` once that has been merged upstream, so a user
+    can keep editing the local file after contributing it without the
+    bundled version silently winning (see bundled_shadow_of, which turns
+    that same collision into a warning rather than an error).
     """
     merged = list(bundled)
     unmatched = []
     for module in extra:
+        module_key = parser_name_key(module.__name__)
         for i, bundled_module in enumerate(merged):
-            bundled_name = bundled_module.__name__.rsplit(".", 1)[-1]
-            if bundled_name == module.__name__:
+            if parser_name_key(bundled_module.__name__) == module_key:
                 merged[i] = module
                 break
         else:
             unmatched.append(module)
     return merged + unmatched
+
+
+def bundled_shadow_of(bundled: list, module) -> str | None:
+    """If `module` (the parser a dispatcher's detect() matched) shadows a
+    differently-spelled but equivalent bundled parser - same
+    parser_name_key, different actual filename, i.e. a locally-built
+    `foo-bar-pdf.py` sitting in the bundled `foo_bar_pdf.py`'s slot
+    after being merged upstream - returns that bundled parser's
+    filename, else None.
+
+    `bundled` is the dispatcher's own unmodified _PARSERS list (not the
+    merge_parsers output). An exact-name override (the documented "fix a
+    bundled parser in place" workflow, e.g. dropping `bofa_checking.py`)
+    is deliberately NOT reported - that has always been silent and
+    intentional; only the dash/underscore-differing case, which means
+    "this is your own contributed parser, now also bundled", is.
+    """
+    if module is None:
+        return None
+    module_leaf = module.__name__.rsplit(".", 1)[-1]
+    module_key = parser_name_key(module_leaf)
+    for b in bundled:
+        b_leaf = b.__name__.rsplit(".", 1)[-1]
+        if b_leaf != module_leaf and parser_name_key(b_leaf) == module_key:
+            return b_leaf + ".py"
+    return None
 
 
 def check_expected_parser(module, reason: str, expected_parser: str | None) -> str | None:
@@ -485,7 +534,11 @@ def check_expected_parser(module, reason: str, expected_parser: str | None) -> s
     expected_name = expected_parser[:-3] if expected_parser.endswith(".py") else expected_parser
     if module is not None:
         matched_name = module.__name__.rsplit(".", 1)[-1]
-        if matched_name == expected_name:
+        # '-'/'_' insensitive: the caller's expected filename is dash-spelled
+        # (pkg/project/financeparser), but the same parser once merged
+        # upstream is bundled dash->underscore normalized - a match on
+        # either spelling is the intended parser, not a different one.
+        if matched_name == expected_name or parser_name_key(matched_name) == parser_name_key(expected_name):
             return None
         return f"expected parser {expected_parser} to match, but {matched_name}.py matched first instead"
     if reason:
