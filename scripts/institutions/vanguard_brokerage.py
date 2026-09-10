@@ -77,17 +77,8 @@ _STMT_DATE_RE = re.compile(r"^([A-Z][a-z]+ \d{1,2}, \d{4}),\s")
 # "Trust brokerage account—XXXX6763", "Vanguard Brokerage Account—XXXX6763".
 _ACCOUNT_RE = re.compile(r"brokerage account[\s—–-]+([X\d]{3,})", re.I)
 
-_ACCOUNT_TYPE_PATTERNS = [
-    (re.compile(r"\bROTH\s+IRA\b", re.I), "Roth IRA"),
-    (re.compile(r"\bROLLOVER\s+IRA\b", re.I), "Rollover IRA"),
-    (re.compile(r"\bTRADITIONAL\s+IRA\b", re.I), "Traditional IRA"),
-    (re.compile(r"\bINHERITED\s+IRA\b", re.I), "Inherited IRA"),
-    (re.compile(r"\bSEP[\s-]*IRA\b", re.I), "SEP IRA"),
-    (re.compile(r"\bSIMPLE[\s-]*IRA\b", re.I), "SIMPLE IRA"),
-    (re.compile(r"\b401\s*\(?\s*K\s*\)?\b", re.I), "401(k)"),
-    (re.compile(r"\b403\s*\(?\s*B\s*\)?\b", re.I), "403(b)"),
-    (re.compile(r"\bIRA\b", re.I), "IRA"),
-]
+# See common.ACCOUNT_TYPE_PATTERNS - this table used to be duplicated here
+# and in fidelity_brokerage.py, and had drifted out of step with it.
 # The account-title line names the registration/wrapper, e.g.
 # "Individual brokerage account—00004152" / "Trust brokerage account—XXXX6763".
 _ACCOUNT_TITLE_RE = re.compile(r"^\S.*brokerage account[\s—–-]", re.I)
@@ -199,9 +190,7 @@ def _account(text: str) -> str:
 def _account_type(text: str) -> str:
     for line in text.splitlines():
         if _ACCOUNT_TITLE_RE.match(line.strip()):
-            for pattern, account_type in _ACCOUNT_TYPE_PATTERNS:
-                if pattern.search(line):
-                    return account_type
+            return common.classify_account_type(line, "Brokerage")
     return "Brokerage"
 
 

@@ -169,7 +169,13 @@ def _extract_statement_meta(combined_text: str) -> tuple[str, str]:
     account_type = ""
     m = _ACCOUNT_NAME_RE.search(combined_text)
     if m:
-        account_type = "Savings" if "savings" in m.group(1).lower() else "Checking"
+        # Wells Fargo names the product in the header ("Everyday
+        # Checking", "Way2Save Savings", "Platinum Savings"). Classify it
+        # with the shared table so money-market and CD products are
+        # recognized too, falling back to Checking - the header matched, so
+        # this is a deposit account, and checking is what an unlabelled one
+        # is on these statements.
+        account_type = common.classify_account_type(m.group(1), "Checking")
 
     statement_date = ""
     m = _STATEMENT_DATE_RE.search(combined_text)

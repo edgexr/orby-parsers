@@ -428,7 +428,14 @@ class Statement:
         p.y = TOP
         p.line("INVESTMENT REPORT")
         p.line(f"{d['period'][0]} - {d['period'][1]}")
-        if d["masked_account_label"]:
+        if d.get("fully_masked_account"):
+            # Every digit masked. Some months of the real statement run
+            # are redacted this way, and the parser then has no account
+            # identity to emit at all - see knownAccountNumber, which
+            # resolves it against the account already on file rather
+            # than letting the rows become a second, phantom account.
+            p.line(f"Account # {'X' * (8 + len(ACCOUNT_DIGITS))}")
+        elif d["masked_account_label"]:
             p.line(f"xxxxxxx x xxxxxx{ACCOUNT_DIGITS}")
         else:
             p.line(f"Account # XXXXXXXX{ACCOUNT_DIGITS}")
@@ -811,7 +818,10 @@ class Statement:
         p.blank()
         p.line("FIDELITY ACCOUNT XXXXX XXXXXXXX AND XXXXXX XXXXXXXX -")
         p.line("WITH RIGHTS OF SURVIVORSHIP TOD")
-        p.line(f"Account Number: XXXXXXXX{ACCOUNT_DIGITS}")
+        if self.d.get("fully_masked_account"):
+            p.line(f"Account Number: {'X' * (8 + len(ACCOUNT_DIGITS))}")
+        else:
+            p.line(f"Account Number: XXXXXXXX{ACCOUNT_DIGITS}")
         p.line(f"Your Account Value: {money(self.total_holdings, dollar=True)}")
         p.blank()
         deposits = round(sum(r["amount"] for r in self.d["deposits"]), 2)
@@ -996,6 +1006,20 @@ def main():
               f"core closing {money(stmt.closing_core, dollar=True)}, "
               f"flows {money(stmt.net_flows, dollar=True)}, "
               f"income {money(stmt.income_total, dollar=True)}")
+
+    # A fully-masked month, kept out of the sidecar above on purpose:
+    # the tests that sidecar drives chain each month's balances onto the
+    # last, and this is January again rather than a fourth month. It
+    # exists for one property - that a statement disclosing no account
+    # number at all still lands on the right account - which
+    # TestExtractFidelitySyntheticFullyMaskedAccount checks directly.
+    data = month_one()
+    data["fully_masked_account"] = True
+    masked = Statement(data, 0, 1)
+    masked_pages = masked.build()
+    masked_name = "fidelity-synthetic-fully-masked-202601.pdf"
+    build_pdf(masked_pages, os.path.join(here, masked_name))
+    print(f"wrote {masked_name}: {len(masked_pages)} pages, every digit of the account number masked")
 
     sidecar = os.path.join(here, "fidelity-synthetic-expectations.json")
     with open(sidecar, "w") as f:

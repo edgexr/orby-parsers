@@ -62,12 +62,15 @@ def detect(head_text: str) -> tuple[bool, str]:
 
 
 def _classify_account_type(product_name: str) -> str:
-    lower = product_name.lower()
-    if "checking" in lower or "chkg" in lower:
-        return "Checking"
-    if "savings" in lower or "svgs" in lower:
-        return "Savings"
-    return product_name.strip()
+    """Maps a BofA product name ("Adv Plus Banking", "Regular Savings")
+    onto an account-type label.
+
+    Falls back to the product name itself rather than guessing: ingest
+    keeps an unrecognized value verbatim as account_type_raw and reports
+    the account as unclassified, which is a visible gap someone can fix -
+    where a wrong guess is a wrong number nobody notices.
+    """
+    return common.classify_account_type(product_name, product_name.strip())
 
 
 def _statement_date(combined_text: str) -> str:

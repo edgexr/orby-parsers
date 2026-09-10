@@ -17,6 +17,84 @@ def last4_digits(s: str) -> str:
     return digits[-4:]
 
 
+# Ordered patterns mapping an account title, product name or registration
+# line onto the label this codebase uses for that kind of account.
+#
+# ORDER IS SIGNIFICANT, and the rule is "most specific first": "Roth
+# 401(k)" must be tested before "401(k)", and "Rollover IRA"/"Roth IRA"
+# before the bare "IRA", or the general pattern swallows the specific one
+# and a Roth is reported as an ordinary IRA. Adding a pattern means
+# deciding where in this list it belongs, not appending to the end.
+#
+# This table lives here, once, because it used to live twice - a copy in
+# fidelity_brokerage.py and another in vanguard_brokerage.py - and the two
+# had already drifted: Fidelity recognized HSA and 529, Vanguard did not,
+# so the same account type read differently depending on which custodian
+# sent the statement.
+#
+# The labels are the document's own vocabulary, deliberately not a
+# normalized enum. Normalization happens once on the Go side, at the
+# ingest boundary (pkg/ingest/account_type.go), so a parser - including a
+# community parser written against the published contract - never has to
+# know the enum and can never get it wrong. Keep the two tables in step
+# when adding a pattern.
+ACCOUNT_TYPE_PATTERNS = [
+    # Roth variants, before anything matching their base form.
+    (re.compile(r"\bROTH\s*\(?\s*401\s*\(?\s*K\s*\)?", re.I), "Roth 401(k)"),
+    (re.compile(r"\b401\s*\(?\s*K\s*\)?\s*ROTH\b", re.I), "Roth 401(k)"),
+    (re.compile(r"\bROTH\s+IRA\b", re.I), "Roth IRA"),
+    (re.compile(r"\bROTH\b", re.I), "Roth IRA"),
+    # Qualified IRAs, before the bare IRA.
+    (re.compile(r"\bROLLOVER\s+IRA\b|\bROLLOVER\b", re.I), "Rollover IRA"),
+    (re.compile(r"\bTRADITIONAL\s+IRA\b|\bTRADITIONAL\b", re.I), "Traditional IRA"),
+    (re.compile(r"\bINHERITED\s+IRA\b|\bINHERITED\b|\bBENEFICIARY\s+IRA\b", re.I), "Inherited IRA"),
+    (re.compile(r"\bSEP[\s-]*IRA\b|\bSEP\b", re.I), "SEP IRA"),
+    (re.compile(r"\bSIMPLE[\s-]*IRA\b", re.I), "SIMPLE IRA"),
+    (re.compile(r"\b401\s*\(?\s*K\s*\)?", re.I), "401(k)"),
+    (re.compile(r"\b403\s*\(?\s*B\s*\)?", re.I), "403(b)"),
+    (re.compile(r"\b457\s*\(?\s*B?\s*\)?", re.I), "457(b)"),
+    (re.compile(r"\bHSA\b|\bHEALTH\s+SAVINGS\b", re.I), "HSA"),
+    (re.compile(r"\b529\b|\bCOLLEGE\s+SAVINGS\b", re.I), "529"),
+    # The bare IRA, only after every qualified form has had its turn.
+    (re.compile(r"\bIRA\b", re.I), "IRA"),
+    # Liabilities before the cash patterns - a credit card line often
+    # also says "Account".
+    (re.compile(r"\bCREDIT\s*CARD\b|\bVISA\b|\bMASTERCARD\b|\bAMERICAN\s+EXPRESS\b", re.I), "Credit Card"),
+    (re.compile(r"\bMORTGAGE\b|\bHELOC\b|\bHOME\s+EQUITY\b", re.I), "Mortgage"),
+    (re.compile(r"\bLOAN\b|\bLINE\s+OF\s+CREDIT\b", re.I), "Loan"),
+    # Cash. Money market before savings: "money market savings" is a
+    # money market account.
+    (re.compile(r"\bMONEY\s*MARKET\b|\bMMA\b|\bMMKT\b", re.I), "Money Market"),
+    (re.compile(r"\bCERTIFICATE\s+OF\s+DEPOSIT\b", re.I), "CD"),
+    (re.compile(r"\bCHECKING\b|\bCHKG\b", re.I), "Checking"),
+    (re.compile(r"\bSAVINGS\b|\bSVGS\b", re.I), "Savings"),
+    # Trust before the generic brokerage forms: a trust brokerage account
+    # says both.
+    (re.compile(r"\bTRUST\b|\bREVOCABLE\b|\bIRREVOCABLE\b", re.I), "Trust"),
+]
+
+
+def classify_account_type(text: str, default: str = "") -> str:
+    """Returns the account-type label for an account title, product name
+    or registration line, or default if nothing matches.
+
+    A parser that has a sensible fallback for its own documents passes it
+    as default - a Fidelity or Vanguard statement with no tax-advantaged
+    wrapper named on it is an ordinary taxable brokerage account, so those
+    parsers pass "Brokerage". A bank parser with no such guarantee should
+    pass the raw product name (or leave it "") rather than guess: an
+    unrecognized value is preserved verbatim as account_type_raw and
+    reported as unclassified, which is a visible gap someone can fix,
+    where a wrong guess is a wrong number nobody notices.
+    """
+    if not text:
+        return default
+    for pattern, account_type in ACCOUNT_TYPE_PATTERNS:
+        if pattern.search(text):
+            return account_type
+    return default
+
+
 def tag_account(transactions: list[dict], account: str, account_type: str) -> None:
     """Sets each transaction's "account"/"accountType" to account/
     account_type, unless a transaction already has one set (e.g. a

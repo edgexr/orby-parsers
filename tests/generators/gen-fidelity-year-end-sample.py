@@ -265,7 +265,13 @@ class Statement:
             "file": filename,
             "statementDate": CLOSE_DATE,
             "account": ACCOUNT_LAST4,
-            "accountType": "Brokerage",
+            # "Trust", not "Brokerage": this fixture's registration is a
+            # revocable family trust, and the shared account-type table
+            # (common.ACCOUNT_TYPE_PATTERNS) recognizes that where the
+            # Fidelity-only table it replaced did not. A revocable trust
+            # is still taxable - see TreatmentOf - so only the label is
+            # more specific, not the tax treatment.
+            "accountType": "Trust",
             "totalHoldings": self.total_holdings,
             "coreValue": self.core_value,
             "positions": {h.symbol: round(h.market_value, 2) for h in ALL_HOLDINGS},

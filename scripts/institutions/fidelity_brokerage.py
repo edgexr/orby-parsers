@@ -149,19 +149,10 @@ _ACCOUNT_TYPE = "Brokerage"
 # closing legal text names most of these generically ("In Traditional
 # IRAs, Rollover IRAs, SEP-IRAs, SIMPLE IRAs and Keoghs, earnings
 # are...") and would otherwise match every statement.
-_ACCOUNT_TYPE_PATTERNS = [
-    (re.compile(r"\bROTH\s+IRA\b", re.I), "Roth IRA"),
-    (re.compile(r"\bROLLOVER\s+IRA\b", re.I), "Rollover IRA"),
-    (re.compile(r"\bTRADITIONAL\s+IRA\b", re.I), "Traditional IRA"),
-    (re.compile(r"\bINHERITED\s+IRA\b", re.I), "Inherited IRA"),
-    (re.compile(r"\bSEP[\s-]*IRA\b", re.I), "SEP IRA"),
-    (re.compile(r"\bSIMPLE[\s-]*IRA\b", re.I), "SIMPLE IRA"),
-    (re.compile(r"\b401\s*\(?\s*K\s*\)?\b", re.I), "401(k)"),
-    (re.compile(r"\b403\s*\(?\s*B\s*\)?\b", re.I), "403(b)"),
-    (re.compile(r"\bHSA\b|\bHEALTH\s+SAVINGS\b", re.I), "HSA"),
-    (re.compile(r"\b529\b", re.I), "529"),
-    (re.compile(r"\bIRA\b", re.I), "IRA"),
-]
+# The account-type vocabulary now lives once in common.ACCOUNT_TYPE_PATTERNS
+# (see common.classify_account_type). It used to be duplicated here and in
+# vanguard_brokerage.py, and the two copies had drifted - this one knew
+# about HSA and 529 and Vanguard's did not.
 
 # The account title block on page 1 - "FIDELITY ACCOUNT <registration>"
 # down to the account number - which is where the wrapper is named.
@@ -820,10 +811,7 @@ def _account_type(title_block: str) -> str:
     Only tax-advantaged wrappers get their own name; every ordinary
     taxable registration reports _ACCOUNT_TYPE - see its comment for
     why."""
-    for pattern, account_type in _ACCOUNT_TYPE_PATTERNS:
-        if pattern.search(title_block):
-            return account_type
-    return _ACCOUNT_TYPE
+    return common.classify_account_type(title_block, _ACCOUNT_TYPE)
 
 
 def _account_identity(combined: str, header_lines: set[str]) -> str:
