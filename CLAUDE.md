@@ -84,7 +84,10 @@ as the same parser, so the still-present local copy keeps overriding the
 now-bundled one and the user can go on editing it. The dispatchers report
 that collision as a non-fatal `warnings` entry in their JSON output
 (`parser_common.bundled_shadow_of`), which Orby surfaces on the Verify
-step rather than failing.
+step rather than failing. If the local copy is byte-identical to the
+bundled one apart from a leading SPDX header / trailing whitespace
+(`parser_common.bundled_shadow_identical`), the warning instead says the
+local copy has no edits and can just be removed.
 
 **This directory's files run sandboxed** (no network, filesystem limited
 to the target file's directory and the parsers directory). Stdlib +

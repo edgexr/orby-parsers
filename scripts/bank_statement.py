@@ -301,12 +301,19 @@ def _attach_shadow_warning(result: dict, module, only_extra_parser) -> None:
     shadowed = parser_common.bundled_shadow_of(_PARSERS, module)
     if not shadowed:
         return
-    result.setdefault("warnings", []).append(
-        f"This parser is now also bundled with Orby as {shadowed} (it was "
-        f"merged upstream). Your local copy in the parsers directory is "
-        f"taking precedence while you keep editing it; remove it from "
-        f"Manage Parsers once you're done to use the bundled version."
-    )
+    if parser_common.bundled_shadow_identical(_PARSERS, module):
+        result.setdefault("warnings", []).append(
+            f"This parser is already bundled with Orby as {shadowed} (merged "
+            f"upstream) and your local copy in the parsers directory is "
+            f"identical to it - you can remove it from Manage Parsers."
+        )
+    else:
+        result.setdefault("warnings", []).append(
+            f"This parser is now also bundled with Orby as {shadowed} (it was "
+            f"merged upstream). Your local copy in the parsers directory has "
+            f"changes and is taking precedence; remove it from Manage Parsers "
+            f"once you're done to use the bundled version."
+        )
 
 
 if __name__ == "__main__":

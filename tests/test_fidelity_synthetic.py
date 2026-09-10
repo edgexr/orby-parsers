@@ -71,6 +71,31 @@ def test_extract_fidelity_synthetic(run_statement, want):
     assert approx(closing, want["closingCoreBalance"])
 
 
+def test_fidelity_merger_with_cash_payout(run_statement):
+    """The March statement's merger exchanges one CUSIP for another and
+    the outgoing leg also pays cash in lieu ("*EXCHANGED FOR CUSIP ... +
+    $1.145* MER PAYOUT"). The payout in the Amount column is kept; the
+    asterisk-wrapped annotation and its $-figure do not leak into the
+    description; the space-less "#REORCM..." reference is still read."""
+    if not _EXPECT.exists():
+        pytest.skip("regenerate with tests/generators/gen-fidelity-synthetic-sample.py")
+    stmt = run_statement("fidelity-synthetic-202603.pdf")
+
+    corp = [t for t in stmt.brokerage_transactions if t.get("transaction_type") == "corporate_action"]
+    out = next(t for t in corp if t["action"] == "Merger Out")
+    inc = next(t for t in corp if t["action"] == "Merger In")
+
+    assert approx(out["amount"], 1832.00)
+    assert out["description"] == "ZENITH FUSION HOLDINGS COM"
+    assert "*" not in out["description"] and "$" not in out["description"]
+    assert out["security_id"] == "666666FF6" and out["related_security_id"] == "777777GG7"
+    assert out["reference"] == "CM0099887766000"
+
+    assert approx(inc["amount"], 0.0)
+    assert inc["security_id"] == "777777GG7" and inc["related_security_id"] == "666666FF6"
+    assert inc["reference"] == "M0099887766001"
+
+
 def test_extract_fidelity_synthetic_year_end(run_statement):
     if not _YEAR_END_EXPECT.exists():
         pytest.skip("regenerate with tests/generators/gen-fidelity-year-end-sample.py")

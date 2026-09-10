@@ -42,17 +42,21 @@ exchanges, option assignments and share-lending collateral adjustments -
 are parsed into brokerage_transactions as corporate actions:
 transaction_type "corporate_action", an `action` naming what happened
 and which direction it went ("Merger In", "Merger Out", "Adjustment
-Out"), the printed quantity, and amount 0.00.
+Out"), the printed quantity, and the printed Transaction Amount.
 
-Zero is what the "-" in the Transaction Amount column means for these
-rows: a share exchange moves no cash. That is worth stating because
-these sections used to be skipped on the grounds that a required numeric
-`amount` could only be filled by inventing a figure - but the figure is
-not invented, and skipping them cost the only record of why a position
-changed. A merger is otherwise visible solely as 1,600 shares of one
-security vanishing and 1,960 of another appearing, with nothing tying
-the two together. related_security_id is that tie: the CUSIP on the
-other side of the exchange, which the notes print on both legs (see
+Usually that amount is 0.00 - the "-" in the column, which is what a
+pure share exchange moves. That is worth stating because these sections
+used to be skipped on the grounds that a required numeric `amount` could
+only be filled by inventing a figure - but the figure is not invented,
+and skipping them cost the only record of why a position changed. When
+the column DOES print a figure - a merger paying cash in lieu, a CVR
+payout ("*EXCHANGED FOR CUSIP ... + $11.45* MER PAYOUT") - that cash is
+real and is kept; it is not double-counted, because the money-market
+sweep that mirrors it in Core Fund Activity is not persisted (below).
+A merger is otherwise visible solely as 1,600 shares of one security
+vanishing and 1,960 of another appearing, with nothing tying the two
+together. related_security_id is that tie: the CUSIP on the other side
+of the exchange, which the notes print on both legs (see
 _collect_corporate_note). The Go side turns it into the securities
 table's successor_symbol.
 
@@ -445,7 +449,7 @@ _CORPORATE_ROW_RE = re.compile(
     r"\s+(?P<security_id>[0-9A-Z]{9})"
     r"\s+(?P<label>[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})"
     r"\s+(?P<quantity>" + _NUM + r")"
-    r"(?:\s+" + _VALUE + r")*\s*$"
+    r"(?P<values>(?:\s+" + _VALUE + r")*)\s*$"
 )
 # The successor/predecessor CUSIP, which the notes under a merger row
 # print in one of two directions: the incoming leg says what it came
@@ -457,7 +461,7 @@ _MERGER_TO_RE = re.compile(r"\bCUSIP\s+(?P<cusip>[0-9A-Z]{9})\b")
 # not, so both shapes have to be read - a wrapped one left unread ends
 # up appended to the security's name, which is what the name is matched
 # against to find its ticker.
-_REOR_REF_RE = re.compile(r"#REOR\s+(?P<reference>[0-9A-Z]{6,})\b")
+_REOR_REF_RE = re.compile(r"#REOR\s*(?P<reference>[0-9A-Z]{6,})\b")
 _REOR_WRAPPED_RE = re.compile(r"#REOR\s*$")
 _REOR_CONTINUATION_RE = re.compile(r"^(?P<reference>[0-9A-Z]{6,})\b")
 # Everything from the first note marker to the end of the line is
@@ -1140,6 +1144,25 @@ def _strip_notes(text: str) -> str:
     return " ".join(_ACTIVITY_NOTE_RE.sub(" ", text).split())
 
 
+def _corporate_amount(values: str | None) -> float:
+    """The cash an "Other Activity In/Out" row moved. The row's trailing
+    columns are Price, Transaction Cost, Amount; the last one is the
+    figure that matters. "-" in every column (the common share-only
+    exchange) reads as 0.00."""
+    if not values:
+        return 0.0
+    tokens = values.split()
+    amount = _amount(tokens[-1]) if tokens else None
+    return amount if amount is not None else 0.0
+
+
+# Fidelity wraps a payout annotation in *asterisks* and prints the
+# per-share figure inside it ("*EXCHANGED FOR CUSIP ... + $11.45* MER
+# PAYOUT"). Once _CORPORATE_NOTE_RE has cut the annotation at its marker,
+# these are what can be left dangling on the security's name.
+_CORPORATE_NOTE_RESIDUE_RE = re.compile(r"[*+]|\$[\d,]+\.\d+")
+
+
 def _collect_corporate_note(row: dict, line: str) -> None:
     """Reads the annotations under an Other Activity In/Out row, and
     appends whatever is left of the line to the security's name.
@@ -1178,7 +1201,8 @@ def _collect_corporate_note(row: dict, line: str) -> None:
         row["reference"] = ref.group("reference")
     elif _REOR_WRAPPED_RE.search(line):
         row["_await_reference"] = True
-    text = " ".join(_CORPORATE_NOTE_RE.sub("", line).split())
+    text = _CORPORATE_NOTE_RE.sub("", line)
+    text = " ".join(_CORPORATE_NOTE_RESIDUE_RE.sub(" ", text).split())
     if text:
         row["_name"] += " " + text
 
@@ -1502,12 +1526,18 @@ def parse(pages_text: list[str], pdf_path: str) -> dict:
                     # foldSecurityEvidence).
                     "_label": "",
                     "_name": match.group("name"),
-                    # A share exchange moves no cash, so 0.00 is what
-                    # the "-" in the Transaction Amount column actually
-                    # means here - not a figure invented to satisfy a
-                    # required key. transaction_type is what keeps these
-                    # rows out of a trade or cash-flow query.
-                    "amount": 0.0,
+                    # Usually a share exchange moves no cash and the
+                    # Transaction Amount column is "-", which _corporate_amount
+                    # reads as 0.00 - not a figure invented to satisfy a
+                    # required key. But a merger can also pay cash in lieu
+                    # (a CVR payout, a fractional-share buyout): when the
+                    # Amount column prints a real figure, that is the cash
+                    # the account actually received and it is kept. The
+                    # money-market sweep that mirrors it in Core Fund
+                    # Activity is not persisted (see the module docstring),
+                    # so this does not double-count. transaction_type is
+                    # what keeps these rows out of a trade or cash-flow query.
+                    "amount": _corporate_amount(match.group("values")),
                     "action": (label + " " + direction).strip(),
                     "transaction_type": _CORPORATE_TYPE,
                     "subtype": direction,

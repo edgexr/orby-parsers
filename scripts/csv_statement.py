@@ -315,13 +315,21 @@ def main() -> None:
             # (see parser_common.bundled_shadow_of), typically because the
             # user already contributed this parser upstream and is now
             # editing their local copy.
-            result.setdefault("warnings", []).append(
-                f"This parser is now also bundled with Orby as {shadowed} (it "
-                f"was merged upstream). Your local copy in the parsers "
-                f"directory is taking precedence while you keep editing it; "
-                f"remove it from Manage Parsers once you're done to use the "
-                f"bundled version."
-            )
+            if parser_common.bundled_shadow_identical(_PARSERS, module):
+                result.setdefault("warnings", []).append(
+                    f"This parser is already bundled with Orby as {shadowed} "
+                    f"(merged upstream) and your local copy in the parsers "
+                    f"directory is identical to it - you can remove it from "
+                    f"Manage Parsers."
+                )
+            else:
+                result.setdefault("warnings", []).append(
+                    f"This parser is now also bundled with Orby as {shadowed} "
+                    f"(it was merged upstream). Your local copy in the parsers "
+                    f"directory has changes and is taking precedence; remove it "
+                    f"from Manage Parsers once you're done to use the bundled "
+                    f"version."
+                )
     print(json.dumps(result))
 
 

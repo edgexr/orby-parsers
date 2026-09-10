@@ -487,6 +487,21 @@ def merge_parsers(bundled: list, extra: list) -> list:
     return merged + unmatched
 
 
+def _find_shadowed_bundled(bundled: list, module):
+    """Returns the bundled module `module` shadows (same parser_name_key,
+    different actual filename), or None - the shared lookup behind
+    bundled_shadow_of / bundled_shadow_identical."""
+    if module is None:
+        return None
+    module_leaf = module.__name__.rsplit(".", 1)[-1]
+    module_key = parser_name_key(module_leaf)
+    for b in bundled:
+        b_leaf = b.__name__.rsplit(".", 1)[-1]
+        if b_leaf != module_leaf and parser_name_key(b_leaf) == module_key:
+            return b
+    return None
+
+
 def bundled_shadow_of(bundled: list, module) -> str | None:
     """If `module` (the parser a dispatcher's detect() matched) shadows a
     differently-spelled but equivalent bundled parser - same
@@ -502,15 +517,41 @@ def bundled_shadow_of(bundled: list, module) -> str | None:
     intentional; only the dash/underscore-differing case, which means
     "this is your own contributed parser, now also bundled", is.
     """
-    if module is None:
+    b = _find_shadowed_bundled(bundled, module)
+    if b is None:
         return None
-    module_leaf = module.__name__.rsplit(".", 1)[-1]
-    module_key = parser_name_key(module_leaf)
-    for b in bundled:
-        b_leaf = b.__name__.rsplit(".", 1)[-1]
-        if b_leaf != module_leaf and parser_name_key(b_leaf) == module_key:
-            return b_leaf + ".py"
-    return None
+    return b.__name__.rsplit(".", 1)[-1] + ".py"
+
+
+def _normalized_parser_source(path: str) -> str | None:
+    """Reads a parser file and normalizes it for an "is this the same
+    parser?" comparison: drops leading blank lines and a leading SPDX
+    license header (pkg/parsersubmit prepends one when contributing
+    upstream, so the bundled copy carries it and the local drop-in copy
+    usually doesn't), and trims trailing whitespace. Returns None if the
+    file can't be read."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return None
+    lines = text.replace("\r\n", "\n").split("\n")
+    while lines and (lines[0].strip() == "" or lines[0].lstrip().startswith("# SPDX-License-Identifier:")):
+        lines.pop(0)
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def bundled_shadow_identical(bundled: list, module) -> bool:
+    """True when `module` shadows a bundled parser (see bundled_shadow_of)
+    AND the two source files are identical apart from a leading SPDX
+    header and trailing whitespace - i.e. the local drop-in copy carries
+    no edits over what is already bundled and can simply be removed."""
+    b = _find_shadowed_bundled(bundled, module)
+    if b is None:
+        return False
+    local = _normalized_parser_source(getattr(module, "__file__", "") or "")
+    upstream = _normalized_parser_source(getattr(b, "__file__", "") or "")
+    return local is not None and local == upstream
 
 
 def check_expected_parser(module, reason: str, expected_parser: str | None) -> str | None:

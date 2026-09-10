@@ -115,7 +115,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
 endobj
 9 0 obj
-<< /Length 4625 >>
+<< /Length 4687 >>
 stream
 BT /F1 8 Tf 1 0 0 1 738.40 752.00 Tm (S) Tj ET
 BT /F1 8 Tf 1 0 0 1 738.40 741.00 Tm (41062026) Tj ET
@@ -164,16 +164,17 @@ BT /F1 8 Tf 1 0 0 1 31.40 268.00 Tm (Total Other Activity In - -) Tj ET
 BT /F1 8 Tf 1 0 0 1 31.40 257.00 Tm (Other Activity Out) Tj ET
 BT /F1 8 Tf 1 0 0 1 31.40 246.00 Tm (Settlement Symbol/ Total Transaction) Tj ET
 BT /F1 8 Tf 1 0 0 1 31.40 235.00 Tm (Date Security Name CUSIP Description Quantity Price Cost Basis Cost Amount) Tj ET
-BT /F1 8 Tf 1 0 0 1 31.40 224.00 Tm (03/12 ZENITH FUSION HOLDINGS COM 666666FF6 Merger -1,600.000 - - -) Tj ET
-BT /F1 8 Tf 1 0 0 1 72.00 213.00 Tm (EXCHANGED FOR 1.225 SHARES OF) Tj ET
-BT /F1 8 Tf 1 0 0 1 72.00 202.00 Tm (CUSIP 777777GG7 MER PAYOUT #REOR) Tj ET
-BT /F1 8 Tf 1 0 0 1 31.40 191.00 Tm (Total Other Activity Out - -) Tj ET
-BT /F1 8 Tf 1 0 0 1 31.40 180.00 Tm (Withdrawals) Tj ET
-BT /F1 8 Tf 1 0 0 1 31.40 169.00 Tm (Date Reference Description Amount) Tj ET
-BT /F1 8 Tf 1 0 0 1 31.40 158.00 Tm (03/09 Money Line Paid EFT FUNDS PAID ED55667788 /WEB -$4,000.00) Tj ET
-BT /F1 8 Tf 1 0 0 1 72.00 147.00 Tm (SYNTHETIC BANK NA ******1234) Tj ET
-BT /F1 8 Tf 1 0 0 1 31.40 136.00 Tm (Total Withdrawals -$4,000.00) Tj ET
-BT /F1 8 Tf 1 0 0 1 723.60 125.00 Tm (3 of 5) Tj ET
+BT /F1 8 Tf 1 0 0 1 31.40 224.00 Tm (03/12 ZENITH FUSION HOLDINGS COM 666666FF6 Merger -1,600.000 - - $1,832.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 72.00 213.00 Tm (*EXCHANGED FOR CUSIP 777777GG7 +) Tj ET
+BT /F1 8 Tf 1 0 0 1 72.00 202.00 Tm ($1.145* MER PAYOUT) Tj ET
+BT /F1 8 Tf 1 0 0 1 72.00 191.00 Tm (#REORCM0099887766000) Tj ET
+BT /F1 8 Tf 1 0 0 1 31.40 180.00 Tm (Total Other Activity Out - -) Tj ET
+BT /F1 8 Tf 1 0 0 1 31.40 169.00 Tm (Withdrawals) Tj ET
+BT /F1 8 Tf 1 0 0 1 31.40 158.00 Tm (Date Reference Description Amount) Tj ET
+BT /F1 8 Tf 1 0 0 1 31.40 147.00 Tm (03/09 Money Line Paid EFT FUNDS PAID ED55667788 /WEB -$4,000.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 72.00 136.00 Tm (SYNTHETIC BANK NA ******1234) Tj ET
+BT /F1 8 Tf 1 0 0 1 31.40 125.00 Tm (Total Withdrawals -$4,000.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 723.60 114.00 Tm (3 of 5) Tj ET
 endstream
 endobj
 10 0 obj
@@ -262,12 +263,12 @@ xref
 0000001985 00000 n 
 0000007874 00000 n 
 0000008000 00000 n 
-0000012676 00000 n 
-0000012804 00000 n 
-0000016444 00000 n 
-0000016572 00000 n 
+0000012738 00000 n 
+0000012866 00000 n 
+0000016506 00000 n 
+0000016634 00000 n 
 trailer
 << /Size 14 /Root 1 0 R >>
 startxref
-18043
+18105
 %%EOF

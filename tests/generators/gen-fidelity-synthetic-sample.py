@@ -327,8 +327,10 @@ def month_three():
         {"date": "03/31", "action": "You Bought", "amount": 11_050.28, "note": "@ 1"},
     ]
     merger = {"out": {"date": "03/12", "name": ["ZENITH FUSION HOLDINGS COM"], "cusip": "666666FF6",
-                      "qty": -1_600.0, "note": ["EXCHANGED FOR 1.225 SHARES OF",
-                                                "CUSIP 777777GG7 MER PAYOUT #REOR"]},
+                      "qty": -1_600.0, "amount": 1_832.00,
+                      "note": ["*EXCHANGED FOR CUSIP 777777GG7 +",
+                               "$1.145* MER PAYOUT",
+                               "#REORCM0099887766000"]},
               "in": {"date": "03/12", "name": ["ZENITH GLOBAL MUNI FD INC"], "cusip": "777777GG7",
                      "qty": 1_960.0, "note": ["COM STK USD0.1 MER FROM 666666FF6",
                                               "#REOR M0099887766001"]}}
@@ -707,7 +709,10 @@ class Statement:
                        f"{money(round(income_total, 2), dollar=True)}")
         self.income_total = round(income_total, 2)
 
-        # --- Other Activity In / Out (no cash amount) ---
+        # --- Other Activity In / Out ---
+        # The merger's outgoing leg here carries a cash-in-lieu payout in
+        # the Amount column (a CVR/fractional buyout), the incoming leg
+        # does not; adjustments never do.
         if d["merger"] or d["adjustments"]:
             self.ensure(10, "Activity")
             p = self.page
@@ -716,8 +721,9 @@ class Statement:
                 self.trade_header()
                 if d["merger"]:
                     m = d["merger"][key]
+                    amt = money(m["amount"], dollar=True) if m.get("amount") else "-"
                     p.line(f"{m['date']} {m['name'][0]} {m['cusip']} Merger "
-                           f"{money(m['qty'], places=3)} - - -")
+                           f"{money(m['qty'], places=3)} - - {amt}")
                     for w in m["name"][1:] + m["note"]:
                         p.line(w, x=72.0)
                 if d["adjustments"]:
